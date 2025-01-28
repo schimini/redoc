@@ -92,7 +92,9 @@ export class SchemaModel {
     this.refsStack = pushRef(newRefsStack, this.pointer);
     this.rawSchema = resolved;
 
+    //console.log('raw', this.rawSchema)
     this.schema = parser.mergeAllOf(this.rawSchema, this.pointer, this.refsStack);
+    //console.log('after mergeAllOf', this.schema)
     this.init(parser, isChild);
 
     if (options.showExtensions) {
@@ -113,7 +115,7 @@ export class SchemaModel {
     return this.type === type || (isArray(this.type) && this.type.includes(type));
   }
 
-  init(parser: OpenAPIParser, isChild: boolean) {
+  init(parser: OpenAPIParser, isChild: boolean /*, level = 0*/) {
     const schema = this.schema;
     this.isCircular = !!schema['x-circular-ref'];
 
@@ -163,9 +165,15 @@ export class SchemaModel {
       return;
     }
 
-    if (!isChild && getDiscriminator(schema) !== undefined) {
-      this.initDiscriminator(schema, parser);
-      return;
+    if (getDiscriminator(schema)) {
+      //console.log('getDiscriminator = true', schema)
+    }
+    if (getDiscriminator(schema) !== undefined) {
+      console.log('initDiscriminator', schema);
+      this.initDiscriminator(schema, parser, isChild);
+      if (!isChild) {
+        return;
+      }
     } else if (
       isChild &&
       isArray(schema.oneOf) &&
@@ -237,6 +245,7 @@ export class SchemaModel {
   }
 
   private initOneOf(oneOf: OpenAPISchema[], parser: OpenAPIParser) {
+    //console.log('initOneOf', oneOf)
     this.oneOf = oneOf!.map((variant, idx) => {
       const { resolved: derefVariant, refsStack } = parser.deref(variant, this.refsStack, true);
 
@@ -287,13 +296,14 @@ export class SchemaModel {
     }
   }
 
-  private initDiscriminator(schema: OpenAPISchema, parser: OpenAPIParser) {
+  private initDiscriminator(schema: OpenAPISchema, parser: OpenAPIParser, isChild = false) {
     const discriminator = getDiscriminator(schema)!;
     this.discriminatorProp = discriminator.propertyName;
     const implicitInversedMapping = parser.findDerived([
       ...(this.schema['x-parentRefs'] || []),
       this.pointer,
     ]);
+    console.log('hmm', implicitInversedMapping, schema);
 
     if (schema.oneOf) {
       for (const variant of schema.oneOf) {
@@ -309,7 +319,7 @@ export class SchemaModel {
 
     // Defines if the mapping is exhaustive. This avoids having references
     // that overlap with the mapping entries
-    let isLimitedToMapping = discriminator['x-explicitMappingOnly'] || false;
+    let isLimitedToMapping = discriminator['x-explicitMappingOnly'] || isChild || false;
     // if there are no mappings, assume non-exhaustive
     if (Object.keys(mapping).length === 0) {
       isLimitedToMapping = false;
@@ -462,6 +472,8 @@ function buildFields(
       refsStack,
     );
   });
+
+  console.log('fields', $ref, fields);
 
   if (options.sortPropsAlphabetically) {
     fields = sortByField(fields, 'name');

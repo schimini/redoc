@@ -15,13 +15,13 @@ export interface ObjectSchemaProps extends SchemaProps {
   discriminator?: {
     fieldName: string;
     parentSchema: SchemaModel;
-  };
+  }[];
   fieldParentsName?: string[];
 }
 
 export const ObjectSchema = observer(
   ({
-    schema: { fields = [], title },
+    schema: { fields = [], title, discriminatorProp },
     showTitle,
     discriminator,
     skipReadOnly,
@@ -31,7 +31,7 @@ export const ObjectSchema = observer(
   }: ObjectSchemaProps) => {
     const { expandSingleSchemaField, showObjectSchemaExamples, schemasExpansionLevel } =
       React.useContext(OptionsContext);
-
+    console.log('hello', discriminator);
     const filteredFields = React.useMemo(
       () =>
         skipReadOnly || skipWriteOnly
@@ -54,6 +54,8 @@ export const ObjectSchema = observer(
         {showTitle && <PropertiesTableCaption>{title}</PropertiesTableCaption>}
         <tbody>
           {mapWithLast(filteredFields, (field, isLast) => {
+            console.log('here', discriminator, field.name, discriminatorProp);
+            const discriminatorField = discriminator?.find(d => d.fieldName === field.name);
             return (
               <Field
                 key={field.name}
@@ -62,10 +64,10 @@ export const ObjectSchema = observer(
                 expandByDefault={expandByDefault}
                 fieldParentsName={Number(level) > 1 ? fieldParentsName : []}
                 renderDiscriminatorSwitch={
-                  discriminator?.fieldName === field.name
+                  discriminatorField
                     ? () => (
                         <DiscriminatorDropdown
-                          parent={discriminator!.parentSchema}
+                          parent={discriminatorField!.parentSchema}
                           enumValues={field.schema.enum}
                         />
                       )

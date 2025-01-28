@@ -6,7 +6,7 @@ import { FieldDetails } from '../Fields/FieldDetails';
 import { FieldModel, SchemaModel } from '../../services/models';
 
 import { ArraySchema } from './ArraySchema';
-import { ObjectSchema } from './ObjectSchema';
+import { ObjectSchema, ObjectSchemaProps } from './ObjectSchema';
 import { OneOfSchema } from './OneOfSchema';
 import { RecursiveSchema } from './RecursiveSchema';
 
@@ -22,17 +22,19 @@ export interface SchemaOptions {
 export interface SchemaProps extends SchemaOptions {
   schema: SchemaModel;
   fieldParentsName?: string[];
+  discriminatorProps?: ObjectSchemaProps['discriminator'];
 }
 
 @observer
 export class Schema extends React.Component<Partial<SchemaProps>> {
   render() {
-    const { schema, ...rest } = this.props;
+    const { schema, discriminatorProps = [], ...rest } = this.props;
     const level = (rest.level || 0) + 1;
 
     if (!schema) {
       return <em> Schema not provided </em>;
     }
+    console.log('rendering schema', schema);
     const { type, oneOf, discriminatorProp, isCircular } = schema;
 
     if (isCircular) {
@@ -47,17 +49,26 @@ export class Schema extends React.Component<Partial<SchemaProps>> {
         return null;
       }
       const activeSchema = oneOf[schema.activeOneOf];
-      return activeSchema.isCircular ? (
+      console.log('rest', activeSchema);
+      return activeSchema.discriminatorProp ? (
+        <Schema
+          discriminatorProps={[
+            ...discriminatorProps,
+            { fieldName: discriminatorProp, parentSchema: schema },
+          ]}
+          schema={activeSchema}
+        />
+      ) : activeSchema.isCircular ? (
         <RecursiveSchema schema={activeSchema} />
       ) : (
         <ObjectSchema
           {...rest}
           level={level}
           schema={activeSchema}
-          discriminator={{
-            fieldName: discriminatorProp,
-            parentSchema: schema,
-          }}
+          discriminator={[
+            ...discriminatorProps,
+            { fieldName: discriminatorProp, parentSchema: schema },
+          ]}
         />
       );
     }

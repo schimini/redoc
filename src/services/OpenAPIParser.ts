@@ -238,6 +238,7 @@ export class OpenAPIParser {
         writeOnly,
         oneOf,
         anyOf,
+        discriminator,
         'x-circular-ref': isCircular,
         ...otherConstraints
       } = subSchema;
@@ -318,6 +319,17 @@ export class OpenAPIParser {
       if (required !== undefined) {
         receiver.required = [...(receiver.required || []), ...required];
       }
+
+      if (discriminator !== undefined) {
+        if (discriminator.mapping) {
+          if (!Object.values(discriminator.mapping).find(ref => ref === $ref)) {
+            // TODO: Check for circular stuff, the ref might reference tihs, this might already be checked in circular dep checker
+            receiver.discriminator = discriminator;
+          }
+        }
+      }
+
+      //console.log('receiver', receiver.discriminator, $ref)
 
       // merge rest of constraints
       // TODO: do more intelligent merge
