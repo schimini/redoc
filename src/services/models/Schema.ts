@@ -92,9 +92,7 @@ export class SchemaModel {
     this.refsStack = pushRef(newRefsStack, this.pointer);
     this.rawSchema = resolved;
 
-    //console.log('raw', this.rawSchema)
     this.schema = parser.mergeAllOf(this.rawSchema, this.pointer, this.refsStack);
-    //console.log('after mergeAllOf', this.schema)
     this.init(parser, isChild);
 
     if (options.showExtensions) {
@@ -164,12 +162,7 @@ export class SchemaModel {
       this.initConditionalOperators(schema, parser);
       return;
     }
-
-    if (getDiscriminator(schema)) {
-      //console.log('getDiscriminator = true', schema)
-    }
     if (getDiscriminator(schema) !== undefined) {
-      console.log('initDiscriminator', schema);
       this.initDiscriminator(schema, parser, isChild);
       if (!isChild) {
         return;
@@ -245,7 +238,6 @@ export class SchemaModel {
   }
 
   private initOneOf(oneOf: OpenAPISchema[], parser: OpenAPIParser) {
-    //console.log('initOneOf', oneOf)
     this.oneOf = oneOf!.map((variant, idx) => {
       const { resolved: derefVariant, refsStack } = parser.deref(variant, this.refsStack, true);
 
@@ -303,7 +295,6 @@ export class SchemaModel {
       ...(this.schema['x-parentRefs'] || []),
       this.pointer,
     ]);
-    console.log('hmm', implicitInversedMapping, schema);
 
     if (schema.oneOf) {
       for (const variant of schema.oneOf) {
@@ -472,8 +463,6 @@ function buildFields(
       refsStack,
     );
   });
-
-  console.log('fields', $ref, fields);
 
   if (options.sortPropsAlphabetically) {
     fields = sortByField(fields, 'name');

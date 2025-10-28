@@ -34,7 +34,6 @@ export class Schema extends React.Component<Partial<SchemaProps>> {
     if (!schema) {
       return <em> Schema not provided </em>;
     }
-    console.log('rendering schema', schema);
     const { type, oneOf, discriminatorProp, isCircular } = schema;
 
     if (isCircular) {
@@ -49,7 +48,6 @@ export class Schema extends React.Component<Partial<SchemaProps>> {
         return null;
       }
       const activeSchema = oneOf[schema.activeOneOf];
-      console.log('rest', activeSchema);
       return activeSchema.discriminatorProp ? (
         <Schema
           discriminatorProps={[

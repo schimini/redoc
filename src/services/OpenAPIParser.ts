@@ -329,8 +329,6 @@ export class OpenAPIParser {
         }
       }
 
-      //console.log('receiver', receiver.discriminator, $ref)
-
       // merge rest of constraints
       // TODO: do more intelligent merge
       receiver = {

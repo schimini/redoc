@@ -31,13 +31,19 @@ export class DiscriminatorDropdown extends React.Component<{
       return null;
     }
 
-    const options = parent.oneOf.map((subSchema, idx) => {
-      return {
-        value: subSchema.title,
-        idx,
-      };
-    });
-
+    const options = parent.schema.discriminator?.mapping
+      ? Object.keys(parent.schema.discriminator.mapping).map((mappingKey, idx) => {
+          return {
+            value: mappingKey,
+            idx,
+          };
+        })
+      : parent.oneOf.map((subSchema, idx) => {
+          return {
+            value: subSchema.title,
+            idx,
+          };
+        });
     const activeValue = options[parent.activeOneOf].value;
 
     this.sortOptions(options, enumValues);
